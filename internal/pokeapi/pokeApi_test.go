@@ -16,10 +16,10 @@ func TestGetLocationAreas(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		w.Write(mockResponseBody)
 	}))
-	client := PokeApiClient{}
+	client := NewClient()
 	defer server.Close()
 	t.Run("Should return first of 20 areas", func(t *testing.T) {
-		locations, err := client.getLocationAreas()
+		locations, err := client.GetLocationAreas(server.URL)
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
