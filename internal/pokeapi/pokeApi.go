@@ -15,6 +15,14 @@ type LocationAreas struct {
 	} `json:"results"`
 }
 
+func (l LocationAreas) AsBytes() ([]byte, error) {
+	jsonBytes, err := json.Marshal(l)
+	if err != nil {
+		return []byte{}, err
+	}
+	return jsonBytes, nil
+}
+
 type Client struct {
 	httpClient http.Client
 }

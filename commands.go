@@ -1,9 +1,14 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
+
+	"github.com/Lukas-Les/pokedexcli/internal/pokeapi"
+	"github.com/Lukas-Les/pokedexcli/internal/pokecache"
 )
 
 const (
@@ -71,7 +76,7 @@ func commandMap(cfg *config) error {
 	} else {
 		url = start_location_url
 	}
-	locationResponse, err := cfg.pokeapiClient.GetLocationAreas(url)
+	locationResponse, err := handleGetLocationAreas(url, cfg)
 	if err != nil {
 		return err
 	}
@@ -91,7 +96,7 @@ func commandMapb(cfg *config) error {
 	} else {
 		return errors.New("You're on the first page")
 	}
-	locationResponse, err := cfg.pokeapiClient.GetLocationAreas(url)
+	locationResponse, err := handleGetLocationAreas(url, cfg)
 	if err != nil {
 		return err
 	}
@@ -102,4 +107,34 @@ func commandMapb(cfg *config) error {
 		fmt.Println(area.Name)
 	}
 	return nil
+}
+
+func handleGetLocationAreas(url string, cfg *config) (pokeapi.LocationAreas, error) {
+	locationResponse, exists := getLocationAreasFromCache(url, &cfg.cache)
+	if exists {
+		return locationResponse, nil
+	}
+	locationResponse, err := cfg.pokeapiClient.GetLocationAreas(url)
+	if err != nil {
+		return pokeapi.LocationAreas{}, err
+	}
+	responseBytes, err := locationResponse.AsBytes()
+	if err != nil {
+		println("failed to load location response to a bytes: %w", err)
+	}
+	cfg.cache.Add(url, responseBytes)
+	return locationResponse, nil
+}
+
+func getLocationAreasFromCache(url string, cache *pokecache.Cache) (pokeapi.LocationAreas, bool) {
+	cached, exists := cache.Get(url)
+	if !exists {
+		return pokeapi.LocationAreas{}, false
+	}
+	decoder := json.NewDecoder(bytes.NewReader(cached))
+	var result pokeapi.LocationAreas
+	if err := decoder.Decode(&result); err != nil {
+		return pokeapi.LocationAreas{}, false
+	}
+	return result, true
 }
