@@ -28,3 +28,26 @@ func TestGetLocationAreas(t *testing.T) {
 		}
 	})
 }
+
+func TestGetLocationArea(t *testing.T) {
+	mockResponseBody, err := os.ReadFile("testData/location-area-response.json")
+	if err != nil {
+		t.Fatalf("Failed to read mock response file: %v", err)
+	}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write(mockResponseBody)
+	}))
+	client := NewClient()
+	defer server.Close()
+	t.Run("Should return single area", func(t *testing.T) {
+		name := "mt-coronet-6f"
+		location, err := client.GetLocationArea(server.URL, name)
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+		if location.Name != name {
+			t.Errorf("Expected '%s', got '%s'", name, location.Name)
+		}
+	})
+}
