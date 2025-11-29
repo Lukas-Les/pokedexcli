@@ -18,7 +18,7 @@ const (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config) error
+	callback    func(*config, []string) error
 }
 
 func getCommand(name string) (cliCommand, error) {
@@ -51,13 +51,13 @@ func getCommand(name string) (cliCommand, error) {
 	return cmd, nil
 }
 
-func commandExit(cfg *config) error {
+func commandExit(cfg *config, args []string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(cfg *config) error {
+func commandHelp(cfg *config, args []string) error {
 	messasge := `
 Welcome to the Pokedex!
 Usage:
@@ -69,7 +69,7 @@ exit: Exit the Pokedex
 	return nil
 }
 
-func commandMap(cfg *config) error {
+func commandMap(cfg *config, args []string) error {
 	var url string
 	if cfg.Next != nil {
 		url = *cfg.Next
@@ -89,7 +89,7 @@ func commandMap(cfg *config) error {
 	return nil
 }
 
-func commandMapb(cfg *config) error {
+func commandMapb(cfg *config, args []string) error {
 	var url string
 	if cfg.Previous != nil {
 		url = *cfg.Previous
