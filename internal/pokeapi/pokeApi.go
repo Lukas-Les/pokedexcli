@@ -2,6 +2,7 @@ package pokeapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -28,6 +29,11 @@ func (c *Client) GetLocationAreas(url string) (LocationAreas, error) {
 
 func (c *Client) GetLocationArea(url string) (LocationArea, error) {
 	return handleRequest[LocationArea](url, c)
+}
+
+func (c *Client) GetPokemon(name string) (Pokemon, error) {
+	url := fmt.Sprintf("https://pokeapi.co/api/v2/pokemon/%s", name)
+	return handleRequest[Pokemon](url, c)
 }
 
 func fetch(client *http.Client, url string) ([]byte, error) {

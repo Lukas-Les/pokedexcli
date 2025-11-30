@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"os"
 )
 
@@ -42,6 +43,11 @@ func getCommand(name string) (cliCommand, error) {
 			name:        "explore",
 			description: "explore a specific location",
 			callback:    commandExplore,
+		},
+		"catch": {
+			name:        "catch",
+			description: "catch a specific pokemon",
+			callback:    commandCatch,
 		},
 	}
 	cmd, ok := commands[name]
@@ -111,7 +117,7 @@ func commandMapb(cfg *config, args []string) error {
 
 func commandExplore(cfg *config, args []string) error {
 	if len(args) != 1 {
-		return errors.New("Only single parameter required: explore <location>")
+		return errors.New("Single parameter required: explore <location>")
 	}
 	location := args[0]
 	fmt.Printf("Exploring %s\n", location)
@@ -132,5 +138,31 @@ func commandExplore(cfg *config, args []string) error {
 	for _, name := range names {
 		fmt.Printf("- %s\n", name)
 	}
+	return nil
+}
+
+func catch(baseExp int) bool {
+	const K = 200.0
+	chance := K / (K + float64(baseExp))
+	roll := rand.Float64()
+	return roll >= chance
+}
+
+func commandCatch(cfg *config, args []string) error {
+	if len(args) != 1 {
+		return errors.New("Single parameter required: catch <pokemon>")
+	}
+	name := args[0]
+	fmt.Printf("Throwing a Pokeball at %s... \n", name)
+	pokemon, err := cfg.pokeapiClient.GetPokemon(name)
+	if err != nil {
+		return err
+	}
+	if !catch(pokemon.BaseExperience) {
+		fmt.Printf("%s escaped!\n", pokemon.Name)
+		return nil
+	}
+	cfg.Pokedex[pokemon.Name] = pokemon
+	fmt.Printf("%s was caught!\n", pokemon.Name)
 	return nil
 }

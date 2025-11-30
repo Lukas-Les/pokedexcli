@@ -38,7 +38,10 @@ func startRepl(cfg *config) {
 				fmt.Println(fmt.Errorf("Failed to run the command: %w\n", err))
 				continue
 			}
-			cmd.callback(cfg, params)
+			err = cmd.callback(cfg, params)
+			if err != nil {
+				fmt.Println(fmt.Errorf("Command error: %w\n", err))
+			}
 		}
 	}
 }
