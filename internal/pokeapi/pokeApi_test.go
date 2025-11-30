@@ -42,7 +42,7 @@ func TestGetLocationArea(t *testing.T) {
 	defer server.Close()
 	t.Run("Should return single area", func(t *testing.T) {
 		name := "mt-coronet-6f"
-		location, err := client.GetLocationArea(server.URL, name)
+		location, err := client.GetLocationArea(server.URL)
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}

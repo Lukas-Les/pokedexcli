@@ -1,14 +1,9 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
-
-	"github.com/Lukas-Les/pokedexcli/internal/pokeapi"
-	"github.com/Lukas-Les/pokedexcli/internal/pokecache"
 )
 
 const (
@@ -43,6 +38,11 @@ func getCommand(name string) (cliCommand, error) {
 			description: "show previous map",
 			callback:    commandMapb,
 		},
+		"explore": {
+			name:        "explore",
+			description: "explore a specific location",
+			callback:    commandExplore,
+		},
 	}
 	cmd, ok := commands[name]
 	if !ok {
@@ -76,7 +76,7 @@ func commandMap(cfg *config, args []string) error {
 	} else {
 		url = start_location_url
 	}
-	locationResponse, err := handleGetLocationAreas(url, cfg)
+	locationResponse, err := cfg.pokeapiClient.GetLocationAreas(url)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func commandMapb(cfg *config, args []string) error {
 	} else {
 		return errors.New("You're on the first page")
 	}
-	locationResponse, err := handleGetLocationAreas(url, cfg)
+	locationResponse, err := cfg.pokeapiClient.GetLocationAreas(url)
 	if err != nil {
 		return err
 	}
@@ -109,32 +109,28 @@ func commandMapb(cfg *config, args []string) error {
 	return nil
 }
 
-func handleGetLocationAreas(url string, cfg *config) (pokeapi.LocationAreas, error) {
-	locationResponse, exists := getLocationAreasFromCache(url, &cfg.cache)
-	if exists {
-		return locationResponse, nil
+func commandExplore(cfg *config, args []string) error {
+	if len(args) != 1 {
+		return errors.New("Only single parameter required: explore <location>")
 	}
-	locationResponse, err := cfg.pokeapiClient.GetLocationAreas(url)
+	location := args[0]
+	fmt.Printf("Exploring %s\n", location)
+	locationUrl := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/%s", location)
+	locationResponse, err := cfg.pokeapiClient.GetLocationArea(locationUrl)
 	if err != nil {
-		return pokeapi.LocationAreas{}, err
+		return err
 	}
-	responseBytes, err := locationResponse.AsBytes()
-	if err != nil {
-		println("failed to load location response to a bytes: %w", err)
+	var names = []string{}
+	for _, item := range locationResponse.PokemonEncounters {
+		names = append(names, item.Pokemon.Name)
 	}
-	cfg.cache.Add(url, responseBytes)
-	return locationResponse, nil
-}
-
-func getLocationAreasFromCache(url string, cache *pokecache.Cache) (pokeapi.LocationAreas, bool) {
-	cached, exists := cache.Get(url)
-	if !exists {
-		return pokeapi.LocationAreas{}, false
+	if len(names) < 1 {
+		fmt.Println("No pokemons found")
+		return nil
 	}
-	decoder := json.NewDecoder(bytes.NewReader(cached))
-	var result pokeapi.LocationAreas
-	if err := decoder.Decode(&result); err != nil {
-		return pokeapi.LocationAreas{}, false
+	fmt.Printf("Found Pokemon:\n")
+	for _, name := range names {
+		fmt.Printf("- %s\n", name)
 	}
-	return result, true
+	return nil
 }

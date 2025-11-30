@@ -1,5 +1,20 @@
 package pokeapi
 
+import "encoding/json"
+
+type ApiResponse interface {
+	LocationArea | LocationAreas
+}
+
+func ToBytes[T ApiResponse](data T) ([]byte, error) {
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		return []byte{}, err
+	}
+	return jsonBytes, nil
+
+}
+
 type LocationAreas struct {
 	Count    int     `json:"count"`
 	Next     *string `json:"next"`
