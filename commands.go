@@ -49,6 +49,11 @@ func getCommand(name string) (cliCommand, error) {
 			description: "catch a specific pokemon",
 			callback:    commandCatch,
 		},
+		"inspect": {
+			name:        "inspect",
+			description: "inspect pokemon you have catched",
+			callback:    commandInspect,
+		},
 	}
 	cmd, ok := commands[name]
 	if !ok {
@@ -164,5 +169,28 @@ func commandCatch(cfg *config, args []string) error {
 	}
 	cfg.Pokedex[pokemon.Name] = pokemon
 	fmt.Printf("%s was caught!\n", pokemon.Name)
+	return nil
+}
+
+func commandInspect(cfg *config, args []string) error {
+	if len(args) != 1 {
+		return errors.New("Single parameter required: inspect <pokemon>")
+	}
+	name := args[0]
+	pokemon, ok := cfg.Pokedex[name]
+	if !ok {
+		fmt.Printf("you have not caught that pokemon")
+	}
+	fmt.Printf("Name: %v\n", pokemon.Name)
+	fmt.Printf("Height: %v\n", pokemon.Height)
+	fmt.Printf("Weight: %v\n", pokemon.Weight)
+	fmt.Println("Stats:")
+	for _, stat := range pokemon.Stats {
+		fmt.Printf("\t-%s: %v\n", stat.Stat.Name, stat.BaseStat)
+	}
+	fmt.Println("Types:")
+	for _, tp := range pokemon.Types {
+		fmt.Printf("\t- %s\n", tp.Type.Name)
+	}
 	return nil
 }
